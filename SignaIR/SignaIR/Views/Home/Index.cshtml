@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="container">
+
+    <div class="login-area">
+        <input type="text" class="form-control login-input" placeholder="Username ..." />
+        <button class="btn btn-success my-2 login-btn">Sign In</button>
+    </div>
+
+    <div class="chat-area d-none">
+        <div class="text-success">Welcome: <span class="text-warning userName">Pervin Rehimli</span></div>
+        <hr />
+        <div class="row" style="position:relative;height:70vh;">
+            <div class="col-12">
+                <ul class="list-group">
+                </ul>
+            </div>
+            <div class="col-12" style="position:absolute; bottom:0">
+                <input type="text" class="form-control msgInput my-2" placeholder="Message ..." />
+                <button class="btn btn-success my-2 msgBtn d-none">Send</button>
+            </div>
+
+        </div>
+    </div>
+
+
+</div>
+
+
+<script src="~/dist/browser/signalr.min.js"></script>
+
+<script>
+    "use strict"
+
+    let username = "";
+    let message = "";
+    const array = [];
+
+    let connection = new signalR.HubConnectionBuilder().withUrl("/chatHub").build();
+    connection.start().then(function () {
+
+    }).catch(function (err) {
+        console.log(err)
+    })
+
+
+    connection.on("RecieveMessage", function (username, message) {
+        document.querySelector(".list-group").innerHTML += `<li class="list-group-item my-2">${username} says : ${message} </li>`
+    });
+
+
+
+
+
+    document.querySelector(".login-btn").addEventListener("click", function () {
+        username = document.querySelector(".login-input").value
+        if (username.trim() === "") {
+            alert("Please add Username");
+            return;
+        }
+        document.querySelector(".login-area").classList.add("d-none");
+        document.querySelector(".chat-area").classList.remove("d-none");
+        document.querySelector(".userName").innerHTML = username;
+
+        for (let i = 0; i < array.Length; i++) {
+            document.querySelector(".list-group").innerHTML += `<li class="list-group-item my-2">${array[i].user} says : ${array[i].msg} </li>`
+        }
+    });
+
+    document.querySelector(".msgInput").addEventListener("input", function () {
+        if (this.value.trim() !== "") {
+            document.querySelector(".msgBtn").classList.remove("d-none");
+        } else {
+            document.querySelector(".msgBtn").classList.add("d-none");
+        }
+    })
+
+    document.querySelector(".msgBtn").addEventListener("click", function () {
+        message = document.querySelector(".msgInput").value;
+        connection.invoke("SendMessage", username, message).then(function () {
+        }).catch(function (err) {
+            console.log(err)
+        });
+        var obj = {
+            user: username,
+            msg: message
+        };
+        array.push(obj);
+        console.log(array)
+        this.classList.add("d-none");
+        document.querySelector(".msgInput").value = "";
+    })
+
+
+
+
+</script>
